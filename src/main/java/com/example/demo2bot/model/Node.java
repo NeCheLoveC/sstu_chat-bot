@@ -1,6 +1,7 @@
 package com.example.demo2bot.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Constraint;
 import lombok.Data;
 import org.hibernate.Hibernate;
 
@@ -18,17 +19,19 @@ public class Node
     @ManyToOne(optional = true)
     @JoinColumn(name = "parent_node_id")
     protected Node parent;
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = {CascadeType.REMOVE},fetch = FetchType.EAGER)
     protected List<Node> childList = new LinkedList<>();
     @Column(name = "'name'")
     protected String name;
-    @Column(name = "'name'")
+    @Column(name = "'text'")
     protected String text;
     protected Node(){}
     public Node(Node parent, String name, String text) {
         this.parent = parent;
         this.name = name;
         this.text = text;
+
+        //parent.addChild(this);
     }
 
     public void setParent(Node parent)
@@ -45,10 +48,12 @@ public class Node
     }
 
     public String getText() {
+        if(text == null || text.isEmpty())
+            return name;
         return text;
     }
 
-    protected void addChild(Node childNode)
+    public void addChild(Node childNode)
     {
         this.childList.add(childNode);
     }
@@ -68,5 +73,20 @@ public class Node
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public boolean isRootNode() {
+        return this.parent == null;
+    }
+
+    public boolean isNodeIsChildrenOfRootNode()
+    {
+        if(isRootNode())
+            return false;
+        return  parent.isRootNode();
+    }
+
+    public List<Node> getChildList() {
+        return childList;
     }
 }

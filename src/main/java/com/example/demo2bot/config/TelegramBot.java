@@ -25,7 +25,6 @@ import java.util.List;
 
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
-
     final BotConfig config;
     @Autowired
     protected TelegramUserService telegramUserService;
