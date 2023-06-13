@@ -34,9 +34,13 @@ public class TUser
 
     public void setUser(User user) {
         this.user = user;
-        user.connectTelegramUser(this);
+        //user.connectTelegramUser(this);
     }
 
+    public boolean isAuthorizedUser()
+    {
+        return this.user != null ? true : false;
+    }
 
     public void unlink()
     {

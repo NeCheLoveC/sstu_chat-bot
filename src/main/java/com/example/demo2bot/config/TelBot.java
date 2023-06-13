@@ -56,34 +56,37 @@ public class TelBot extends TelegramLongPollingBot
         if(update.hasCallbackQuery()) {
             callBack = update.getCallbackQuery().getData();
             long chatID = update.getCallbackQuery().getMessage().getChatId();
-            Optional<TUser> tUser = tUserService.getTUserById(chatID);
-            if (tUser.isPresent()) {
-                tUser.get().setLastQueryState(callBack);
-                tUserService.saveOrUpdate(tUser.get());
-            } else {
-                TUser newUser = new TUser();
-                newUser.setId(chatID);
-                newUser.setDefaultLang();
-                newUser.setLastQueryState(callBack);
-                tUser = Optional.of(newUser);
-                tUserService.saveOrUpdate(newUser);
-            }
-
+            TUser tUser = getTUserByChatId(chatID);
             if (callBack.equals("AUTH"))
             {
-                showAuthMenu(chatID);
+                if(!tUser.isAuthorizedUser())
+                {
+                    showAuthMenu(chatID);
+                    tUser.setLastQueryState("AUTH");
+                    tUserService.saveOrUpdate(tUser);
+                }
             }
+            else if(callBack.equals("LOGOUT"))
+            {
+                if(tUser.isAuthorizedUser())
+                {
+                    logout(chatID, tUser);
+                    tUser.setLastQueryState("LOGOUT");
+                    tUserService.saveOrUpdate(tUser);
+                }
+            }
+            //Callback - целое число, указывающее на узел графа-меню
             else
             {
                 Optional<Node> node = nodeService.getNodeWithChildren(Long.valueOf(callBack));
                 if(node.isPresent())
-                    sendElements(chatID, node.get());
-                    //Текущий узел был удален, он больше не доступен -> откат в главное меню
+                    sendElements(chatID, node.get(),tUser);
                 else
+                //Узел, на который ссылается callback - удален, возвращение в главное меню.
                 {
                     Long rootNodeId = nodeService.getIdRootNode();
                     Node rootNode = nodeService.getNodeWithChildren(rootNodeId).get();
-                    sendElements(chatID,rootNode);
+                    sendElements(chatID,rootNode,tUser);
                 }
             }
         }
@@ -91,40 +94,27 @@ public class TelBot extends TelegramLongPollingBot
         {
             String messageText = update.getMessage().getText();
             long chatID = update.getMessage().getChatId();
-            Optional<TUser> user = tUserService.getTUserById(chatID);
+            TUser user = getTUserByChatId(chatID);
             //State state = StateFactory.getStateByTUser(user);
             switch (messageText)
             {
                 case "/start":
-                    Long rootNodeId = nodeService.getIdRootNode();
-                    Node rootNode = nodeService.getNodeWithChildren(rootNodeId).get();
-                    if(user.isEmpty())
-                    {
-                        TUser newTUser = new TUser();
-                        newTUser.setId(chatID);
-                        newTUser.setLastQueryState("/start");
-                        newTUser.setDefaultLang();
-                    }
-                    else
-                    {
-                        user.get().setLastQueryState("/start");
-                        tUserService.saveOrUpdate(user.get());
-                    }
-                    sendElements(chatID,rootNode);
+                    user.setLastQueryState("/start");
+                    tUserService.saveOrUpdate(user);
+                    showMainMenu(chatID,user);
                     break;
-                    //Это не команда, тогда это id абитуриента - если lastQuery - "AUTH"
                 default:
-                    if(user.get().getLastQueryState().equals("AUTH"))
+                    //Это не команда, тогда это id абитуриента - если lastQuery - "AUTH"
+                    if(user.getLastQueryState().equals("AUTH"))
                     {
                         //Попробовать авторизироваться -> если абитуриент найден -> отправляем что авторизация прошла успешно
                         Optional<User> claimUser = userService.getUserByUniqueCode(messageText);
                         if(claimUser.isPresent())
                         {
                             //Авторизация прошла успешно
-                            user.get().setUser(claimUser.get());
-                            user.get().setLastQueryState("/start");
-                            tUserService.saveOrUpdate(user.get());
-                            //todo
+                            user.setUser(claimUser.get());
+                            user.setLastQueryState("/start");
+                            tUserService.saveOrUpdate(user);
                             showSuccesAuth(chatID);
                         }
                         else
@@ -139,6 +129,61 @@ public class TelBot extends TelegramLongPollingBot
                         showHowToStart(chatID);
                     }
             }
+        }
+    }
+
+    private void logout(long chatID, TUser tUser)
+    {
+        tUser.setUser(null);
+        showMainMenu(chatID,tUser);
+    }
+
+    private void showMainMenu(long chatID, TUser user)
+    {
+        Node rootNode = nodeService.getRootNode().get();
+        sendElements(chatID,rootNode,user);
+    }
+
+    private void registerButtonLogout(List<InlineKeyboardButton> rowInLine)
+    {
+        InlineKeyboardButton logout = new InlineKeyboardButton();
+        logout.setText("Выйти из профиля");
+        logout.setCallbackData("LOGOUT");
+        rowInLine.add(logout);
+    }
+
+    private void showMenuReauthorization(long chatID)
+    {
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
+        List<InlineKeyboardButton> rowInLine = new LinkedList<>();
+
+        registerButtonLogout(rowInLine);
+        registerButtonBackToMainMenu(rowInLine);
+
+        markupInLine.setKeyboard(toVertical(sections, rowInLine));
+
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setReplyMarkup(markupInLine);
+        sendMessage.setText("Для авторизации введите свой уникальный код в ранжированных списках (как правило - это ваш СНИЛС)");
+        sendMessage.setChatId(chatID);
+        sendMes(sendMessage);
+    }
+
+    private TUser getTUserByChatId(Long chatID)
+    {
+        Optional<TUser> tUser = tUserService.getTUserById(chatID);
+        if (tUser.isPresent()) {
+            //tUser.get().setLastQueryState(callBack);
+            //tUserService.saveOrUpdate(tUser.get());
+            return tUser.get();
+        } else {
+            TUser newUser = new TUser();
+            newUser.setId(chatID);
+            newUser.setDefaultLang();
+            newUser.setLastQueryState("null_state");
+            //tUser = Optional.of(newUser);
+            return tUserService.saveOrUpdate(newUser);
         }
     }
 
@@ -200,13 +245,11 @@ public class TelBot extends TelegramLongPollingBot
     }
 
     @Transactional
-    protected void sendElements(long chatID, Node currentNode)
+    protected void sendElements(long chatID, Node currentNode,TUser user)
     {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
         List<InlineKeyboardButton> rowInLine = wrapNodeIntoInlineKeyBoard(currentNode);
-
-        //Если не корневой элемент
         if(!currentNode.isRootNode())
         {
             //Кнопка НАЗАД
@@ -216,8 +259,18 @@ public class TelBot extends TelegramLongPollingBot
         }
         else
         {
-            registerButtonAuth(rowInLine);
+            if(user.isAuthorizedUser())
+            {
+                //Кнопка "Выйти из профиля"
+                registerButtonLogout(rowInLine);
+            }
+            else
+            {
+                registerButtonAuth(rowInLine);
+            }
         }
+
+
         markupInLine.setKeyboard(toVertical(sections, rowInLine));
 
         SendMessage sendMessage = new SendMessage();
@@ -226,7 +279,6 @@ public class TelBot extends TelegramLongPollingBot
         sendMessage.setChatId(chatID);
         sendMes(sendMessage);
     }
-
     private void registerButtonAuth(List<InlineKeyboardButton> rowInLine)
     {
         InlineKeyboardButton backToMainMenu = new InlineKeyboardButton();
