@@ -1,16 +1,23 @@
-package com.example.demo2bot.model;
+package com.example.demo2bot.entities;
 
+import com.example.demo2bot.config.Lang;
 import jakarta.persistence.*;
 
-@Entity
-@Table
+
 public class TelegramUser
 {
+    /*
     @Id
     protected Long id;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "user_id", nullable = true)
     protected User user;
+
+    @Column(name = "query_state")
+    String lastQueryState;//TRY_"AUTH"
+    @Enumerated(EnumType.STRING)
+    @Column(name = "lang")
+    Lang lang;
 
     protected TelegramUser(){}
 
@@ -46,4 +53,5 @@ public class TelegramUser
     public void setId(Long id) {
         this.id = id;
     }
+     */
 }

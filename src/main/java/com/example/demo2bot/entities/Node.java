@@ -1,8 +1,6 @@
-package com.example.demo2bot.model;
+package com.example.demo2bot.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.Constraint;
-import lombok.Data;
 import org.hibernate.Hibernate;
 
 import java.util.LinkedList;

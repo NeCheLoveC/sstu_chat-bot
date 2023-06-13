@@ -1,6 +1,6 @@
 package com.example.demo2bot.services;
 
-import com.example.demo2bot.model.Node;
+import com.example.demo2bot.entities.Node;
 
 import java.util.List;
 import java.util.Optional;
