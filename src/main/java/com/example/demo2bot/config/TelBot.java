@@ -39,6 +39,9 @@ public class TelBot extends TelegramLongPollingBot
     protected TUserService tUserService;
 
     @Autowired
+    protected FormResultOfClaim formResultOfClaim;
+
+    @Autowired
     public TelBot(BotConfig config) {
         this.config = config;
         List<BotCommand> listofCommands = new ArrayList<>();
@@ -75,9 +78,20 @@ public class TelBot extends TelegramLongPollingBot
                     tUserService.saveOrUpdate(tUser);
                 }
             }
+            else if(callBack.equals("STATUS"))
+            {
+                tUser.setLastQueryState("STATUS");
+                tUserService.saveOrUpdate(tUser);
+                if(tUser.isAuthorizedUser())
+                {
+                    showUserStatus(tUser);
+                }
+            }
             //Callback - целое число, указывающее на узел графа-меню
             else
             {
+                tUser.setLastQueryState("node:" + callBack);
+                tUserService.saveOrUpdate(tUser);
                 Optional<Node> node = nodeService.getNodeWithChildren(Long.valueOf(callBack));
                 if(node.isPresent())
                     sendElements(chatID, node.get(),tUser);
@@ -130,6 +144,24 @@ public class TelBot extends TelegramLongPollingBot
                     }
             }
         }
+    }
+
+    private void showUserStatus(TUser tUser)
+    {
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
+        List<InlineKeyboardButton> rowInLine = new LinkedList<>();
+
+        registerButtonLogout(rowInLine);
+        registerButtonBackToMainMenu(rowInLine);
+
+        markupInLine.setKeyboard(toVertical(sections, rowInLine));
+
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setReplyMarkup(markupInLine);
+        sendMessage.setText(formResultOfClaim.getStringResultOfClaim(tUser.getUser().getUniqueCode()));
+        sendMessage.setChatId(tUser.getId());
+        sendMes(sendMessage);
     }
 
     private void logout(long chatID, TUser tUser)
@@ -262,6 +294,7 @@ public class TelBot extends TelegramLongPollingBot
             if(user.isAuthorizedUser())
             {
                 //Кнопка "Выйти из профиля"
+                registerButtonUserStatus(rowInLine);
                 registerButtonLogout(rowInLine);
             }
             else
@@ -279,6 +312,16 @@ public class TelBot extends TelegramLongPollingBot
         sendMessage.setChatId(chatID);
         sendMes(sendMessage);
     }
+
+    private void registerButtonUserStatus(List<InlineKeyboardButton> rowInLine)
+    {
+        InlineKeyboardButton buttonUserStatus = new InlineKeyboardButton();
+        buttonUserStatus.setText("Получить статус заявления.");
+        // TODO: 14.06.2023 Вынести в отдельный класс / поля состояния чата юзера
+        buttonUserStatus.setCallbackData("STATUS");
+        rowInLine.add(buttonUserStatus);
+    }
+
     private void registerButtonAuth(List<InlineKeyboardButton> rowInLine)
     {
         InlineKeyboardButton backToMainMenu = new InlineKeyboardButton();

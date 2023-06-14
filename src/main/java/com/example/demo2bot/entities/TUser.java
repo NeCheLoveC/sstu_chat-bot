@@ -16,7 +16,7 @@ public class TUser
 {
     @Id
     protected Long id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = true)
     protected User user;
 
