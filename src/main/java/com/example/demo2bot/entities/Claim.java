@@ -186,18 +186,25 @@ public class Claim
         result += "Форма обучения: " + this.direction.getEducationType() + "\n";
         if(this.isWin() && getClaimType()!=ClaimType.COMMERCE_GENERAL_LIST && user.originalDocuments)
         {
-            result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max;
+            if(!this.absence)
+                result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max;
+            else
+                result += "Абитуриент не явился на экзамен (исключается из конкурса).";
         }
         else if(!user.originalDocuments)
         {
             //Заявка не проходит по минимальному баллу
-            if(positionIntoWinList == -1 && minScore != null)
+            if(this.absence)
+            {
+                result += "Абитуриент не явился на экзамен (исключается из конкурса).";
+            }
+            else if(positionIntoWinList == -1 && minScore != null)
             {
                 result += "Заявление не проходит по минимальному баллу - " + minScore.toString();
             }
             else
             {
-                result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max;
+                result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max + "\n";
             }
         }
         return result;
