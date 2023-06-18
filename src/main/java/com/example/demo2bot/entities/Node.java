@@ -2,6 +2,8 @@ package com.example.demo2bot.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,16 +16,18 @@ public class Node
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     protected Long id;
-    @ManyToOne(optional = true)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent_node_id")
     protected Node parent;
-    @OneToMany(mappedBy = "parent", cascade = {CascadeType.REMOVE},fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parent",fetch = FetchType.EAGER)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OrderBy
     protected List<Node> childList = new LinkedList<>();
     @Column(name = "'name'")
     protected String name;
-    @Column(name = "'text'")
+    @Column(name = "'text'", length = 10000)
     protected String text;
-    protected Node(){}
+    public Node(){}
     public Node(Node parent, String name, String text) {
         this.parent = parent;
         this.name = name;

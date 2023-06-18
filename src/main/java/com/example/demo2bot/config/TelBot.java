@@ -282,30 +282,23 @@ public class TelBot extends TelegramLongPollingBot
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
         List<InlineKeyboardButton> rowInLine = wrapNodeIntoInlineKeyBoard(currentNode);
-        if(!currentNode.isRootNode())
-        {
+        if(!currentNode.isRootNode()) {
             //Кнопка НАЗАД
             //Кнопка В ГЛАВНОЕ МЕНЮ
             registerButtonBack(rowInLine, currentNode);
             registerButtonBackToMainMenu(rowInLine);
         }
-        else
-        {
-            if(user.isAuthorizedUser())
-            {
+        else {
+            if(user.isAuthorizedUser()) {
                 //Кнопка "Выйти из профиля"
                 registerButtonUserStatus(rowInLine);
                 registerButtonLogout(rowInLine);
             }
-            else
-            {
+            else {
                 registerButtonAuth(rowInLine);
             }
         }
-
-
         markupInLine.setKeyboard(toVertical(sections, rowInLine));
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setReplyMarkup(markupInLine);
         sendMessage.setText(currentNode.getText());
