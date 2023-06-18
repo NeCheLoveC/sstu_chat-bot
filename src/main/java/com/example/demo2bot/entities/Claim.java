@@ -151,7 +151,7 @@ public class Claim
         int max = 0;
         if(this.getClaimType() == ClaimType.BUDGET_SPECIAL_QUOTA)
         {
-            quota = "Специальная (отдельная) квота";
+            quota = "Отдельная квота";
             minScore = direction.minScoreSpecialList;
             max = this.direction.getAmountSpecialQuota();
         }
@@ -183,7 +183,7 @@ public class Claim
         result += "Сумма баллов абитуриента: " + this.summaryOfScore + "\n";
         result += "Использованная квота : ";
         result += quota + "\n";
-        result += "Форма обучения: " + this.direction.getEducationType() + "\n";
+        result += "Форма обучения: " + this.direction.getEducationType().nameRus + "\n";
         if(this.isWin() && getClaimType()!=ClaimType.COMMERCE_GENERAL_LIST && user.originalDocuments)
         {
             if(!this.absence)

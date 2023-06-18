@@ -26,7 +26,7 @@ public class BotInitializer
         }
         catch (TelegramApiException e)
         {
-            System.out.println(e.printStackTrace(););
+            e.printStackTrace();
         }
     }
 }

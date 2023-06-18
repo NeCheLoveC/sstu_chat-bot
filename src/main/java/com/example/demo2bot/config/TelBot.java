@@ -129,12 +129,12 @@ public class TelBot extends TelegramLongPollingBot
                             user.setUser(claimUser.get());
                             user.setLastQueryState("/start");
                             tUserService.saveOrUpdate(user);
-                            showSuccesAuth(chatID);
+                            showSuccessfulAuth(chatID);
                         }
                         else
                         {
                             //Авторизация не прошла
-                            showUnsuccesAuth(chatID);
+                            showUnsuccessfulAuth(chatID);
                         }
                     }
                     else
@@ -184,37 +184,17 @@ public class TelBot extends TelegramLongPollingBot
         rowInLine.add(logout);
     }
 
-    private void showMenuReauthorization(long chatID)
-    {
-        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
-        List<InlineKeyboardButton> rowInLine = new LinkedList<>();
-
-        registerButtonLogout(rowInLine);
-        registerButtonBackToMainMenu(rowInLine);
-
-        markupInLine.setKeyboard(toVertical(sections, rowInLine));
-
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setReplyMarkup(markupInLine);
-        sendMessage.setText("Для авторизации введите свой уникальный код в ранжированных списках (как правило - это ваш СНИЛС)");
-        sendMessage.setChatId(chatID);
-        sendMes(sendMessage);
-    }
-
     private TUser getTUserByChatId(Long chatID)
     {
         Optional<TUser> tUser = tUserService.getTUserById(chatID);
         if (tUser.isPresent()) {
-            //tUser.get().setLastQueryState(callBack);
-            //tUserService.saveOrUpdate(tUser.get());
+
             return tUser.get();
         } else {
             TUser newUser = new TUser();
             newUser.setId(chatID);
             newUser.setDefaultLang();
             newUser.setLastQueryState("null_state");
-            //tUser = Optional.of(newUser);
             return tUserService.saveOrUpdate(newUser);
         }
     }
@@ -243,15 +223,13 @@ public class TelBot extends TelegramLongPollingBot
         sendMes(sendMessage);
     }
 
-    private void showUnsuccesAuth(long chatID)
+    private void showUnsuccessfulAuth(long chatID)
     {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
         List<InlineKeyboardButton> rowInLine = new LinkedList<>();
         registerButtonBackToMainMenu(rowInLine);
-
         markupInLine.setKeyboard(toVertical(sections, rowInLine));
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setReplyMarkup(markupInLine);
         sendMessage.setText("Абитуриент не найден. Повторите ввод...");
@@ -259,16 +237,13 @@ public class TelBot extends TelegramLongPollingBot
         sendMes(sendMessage);
     }
 
-    private void showSuccesAuth(long chatID)
+    private void showSuccessfulAuth(long chatID)
     {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
         List<InlineKeyboardButton> rowInLine = new LinkedList<>();
         registerButtonBackToMainMenu(rowInLine);
-
         markupInLine.setKeyboard(toVertical(sections, rowInLine));
-
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setReplyMarkup(markupInLine);
         sendMessage.setText("Авторизация прошла успешно");
@@ -283,14 +258,11 @@ public class TelBot extends TelegramLongPollingBot
         List<List<InlineKeyboardButton>> sections = new ArrayList<List<InlineKeyboardButton>>();
         List<InlineKeyboardButton> rowInLine = wrapNodeIntoInlineKeyBoard(currentNode);
         if(!currentNode.isRootNode()) {
-            //Кнопка НАЗАД
-            //Кнопка В ГЛАВНОЕ МЕНЮ
             registerButtonBack(rowInLine, currentNode);
             registerButtonBackToMainMenu(rowInLine);
         }
         else {
             if(user.isAuthorizedUser()) {
-                //Кнопка "Выйти из профиля"
                 registerButtonUserStatus(rowInLine);
                 registerButtonLogout(rowInLine);
             }
@@ -368,40 +340,6 @@ public class TelBot extends TelegramLongPollingBot
         rowInLine.add(backToMainMenu);
     }
 
-    public void contactsMenu(Long chatId)
-    {
-        //long chatId = update.getMessage().getChatId();
-        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> sections = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        InlineKeyboardButton invite = new InlineKeyboardButton();
-        invite.setText("Телефон");
-        invite.setCallbackData("CONTACTS_PHONE");
-        InlineKeyboardButton houses = new InlineKeyboardButton();
-        houses.setText("Адрес приемной комиссии");
-        houses.setCallbackData("CONTACTS_ADRRES");
-        InlineKeyboardButton contacts = new InlineKeyboardButton();
-        contacts.setText("Адреса почтовых отделений");
-        contacts.setCallbackData("CONTACTS_POST");
-        InlineKeyboardButton life = new InlineKeyboardButton();
-        life.setText("Адреса учебных корпусов");
-        life.setCallbackData("CONTACTS_ADRESS_CAMPUS");
-        InlineKeyboardButton back = new InlineKeyboardButton();
-        back.setText("Назад");
-        back.setCallbackData("MENU");
-        rowInLine.add(invite);
-        rowInLine.add(houses);
-        rowInLine.add(contacts);
-        rowInLine.add(life);
-        rowInLine.add(back);
-        markupInLine.setKeyboard(toVertical(sections, rowInLine));
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setReplyMarkup(markupInLine);
-        sendMessage.setText("Главное меню - ");
-        sendMessage.setChatId(chatId);
-        sendMes(sendMessage);
-    }
-
     @Override
     public String getBotUsername() {
         return config.getBotName();
@@ -410,25 +348,6 @@ public class TelBot extends TelegramLongPollingBot
     @Override
     public String getBotToken() {
         return config.getToken();
-    }
-
-    private void startMessage(Update update)
-    {
-        Chat chat = update.getMessage().getChat();
-        long userId = update.getMessage().getChatId();
-        String userName = chat.getFirstName();
-        String textMessage = "Hello, " + userName;
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(userId);
-        sendMessage.setText(textMessage);
-
-
-        try{
-            execute(sendMessage);
-        }
-        catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private List<List<InlineKeyboardButton>> toVertical(List<List<InlineKeyboardButton>> sections, List<InlineKeyboardButton> rowInLine)
@@ -440,74 +359,5 @@ public class TelBot extends TelegramLongPollingBot
             sections.add(button);
         }
         return sections;
-    }
-
-    /*
-    public void tryAuth(Long chatId, String login)
-    {
-
-
-
-
-        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> sections = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-
-
-        SendMessage sendMessage = new SendMessage();
-        User user = userService.getUserByUniqueCode(login);
-        if(user != null)
-        {
-            TelegramUser telegramUser = new TelegramUser(chatId,user);
-            sendMessage.setText("Авторизация прошла успешно!");
-
-        }
-        else
-        {
-            sendMessage.setText("Авторизация не удалась, попробуйте позже.");
-
-        }
-        InlineKeyboardButton houses = new InlineKeyboardButton();
-        houses.setText("Главное меню");
-        houses.setCallbackData("MAIN");
-
-
-
-
-        rowInLine.add(houses);
-
-        //sections.add(rowInLine);
-        markupInLine.setKeyboard(toVertical(sections, rowInLine));
-        sendMessage.setReplyMarkup(markupInLine);
-        sendMessage.setChatId(chatId);
-        sendMes(sendMessage);
-    }
-
-     */
-
-    public void auth(Long chatId)
-    {
-        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> sections = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-
-
-
-
-        InlineKeyboardButton houses = new InlineKeyboardButton();
-        houses.setText("Главное меню");
-        houses.setCallbackData("MAIN");
-
-
-
-        rowInLine.add(houses);
-
-        //sections.add(rowInLine);
-        markupInLine.setKeyboard(toVertical(sections, rowInLine));
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setReplyMarkup(markupInLine);
-        sendMessage.setText("Для авторизации введите ваш СНИЛС или уникальный код, который указан в ранжированы списках (данный код вам выдает приемная комиссия)");
-        sendMessage.setChatId(chatId);
-        sendMes(sendMessage);
     }
 }
