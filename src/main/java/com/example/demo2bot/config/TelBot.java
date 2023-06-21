@@ -188,7 +188,6 @@ public class TelBot extends TelegramLongPollingBot
     {
         Optional<TUser> tUser = tUserService.getTUserById(chatID);
         if (tUser.isPresent()) {
-
             return tUser.get();
         } else {
             TUser newUser = new TUser();
@@ -359,5 +358,22 @@ public class TelBot extends TelegramLongPollingBot
             sections.add(button);
         }
         return sections;
+    }
+
+    public void sendMessageToAllSubscribes(String message)
+    {
+        List<TUser> users = tUserService.getAllTUsers();
+        for(TUser tUser : users)
+        {
+            sendMessageToUser(message,tUser);
+        }
+    }
+
+    private void sendMessageToUser(String mes,TUser tUser)
+    {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setText(mes);
+        sendMessage.setChatId(tUser.getId());
+        sendMes(sendMessage);
     }
 }

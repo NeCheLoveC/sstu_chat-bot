@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,5 +23,10 @@ public class TUserSqlService implements TUserService
     public TUser saveOrUpdate(TUser user)
     {
         return tUserRepository.save(user);
+    }
+
+    @Override
+    public List<TUser> getAllTUsers() {
+        return tUserRepository.findAll();
     }
 }
