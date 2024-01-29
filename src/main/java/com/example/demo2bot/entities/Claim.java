@@ -177,34 +177,58 @@ public class Claim
             quota = "Без квоты (коммерция)";
 
 
-        String result = "Направление ";
+        String result = "Направление: ";
         result += this.direction.name;
         result += " (" + this.direction.abbreviation + ")\n";
         result += "Сумма баллов абитуриента: " + this.summaryOfScore + "\n";
         result += "Использованная квота : ";
         result += quota + "\n";
         result += "Форма обучения: " + this.direction.getEducationType().nameRus + "\n";
+        //Абитуриент проходит по заявлению - это его высший приоритет
         if(this.isWin() && getClaimType()!=ClaimType.COMMERCE_GENERAL_LIST && user.originalDocuments)
         {
             if(!this.absence)
+            {
                 result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max;
+            }
+
             else
                 result += "Абитуриент не явился на экзамен (исключается из конкурса).";
         }
+        //Документы подал, а вот на бюджет по данному место не прошел (не хватило баллов / уже имеет высший приоритет)
+        else if(user.originalDocuments)
+        {
+            if(!this.absence)
+            {
+                if(this.isBudget())
+                    result += "Проходной балл: " + minScore;
+                else
+                    result += "Абитуриент проходит по минимальным баллам";
+            }
+            else
+            {
+                result += "Абитуриент не явился на экзамен (исключается из конкурса).";
+            }
+        }
         else if(!user.originalDocuments)
         {
-            //Заявка не проходит по минимальному баллу
+
             if(this.absence)
             {
                 result += "Абитуриент не явился на экзамен (исключается из конкурса).";
             }
+            //Заявка не проходит по минимальному баллу
             else if(positionIntoWinList == -1 && minScore != null)
             {
                 result += "Заявление не проходит по минимальному баллу - " + minScore.toString();
             }
             else
             {
-                result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max + "\n";
+                if(!this.getClaimType().equals(ClaimType.COMMERCE_GENERAL_LIST))
+                    result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max;
+                else
+                    result += "Абитуриент проходит по минимальным баллам.";
+                //result += "Место в очереди: " + (this.positionIntoWinList + 1) + " / " + max + "\n";
             }
         }
         return result;

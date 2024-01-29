@@ -32,10 +32,22 @@ public class FormResultOfClaim
                 }
                 else
                 {
-                    buf += "\nАбитуриент не прошел по выбранным специальностям.\n";
-                    buf += "Заявления абитуриента:\n";
+                    //buf += "\nАбитуриент не прошел по выбранным специальностям.\n";
+                    buf += "Заявления абитуриента на бюджет:\n";
                     for(Claim claim : user.get().getClaims())
                     {
+                        if(!claim.isBudget())
+                            continue;
+                        buf += "\n----------------------------------\n";
+                        buf += claim.toString();
+                        buf += "\n----------------------------------\n";
+                    }
+
+                    buf += "\nЗаявления абитуриента на платной основе:\n";
+                    for(Claim claim : user.get().getClaims())
+                    {
+                        if(claim.isBudget())
+                            continue;
                         buf += "\n----------------------------------\n";
                         buf += claim.toString();
                         buf += "\n----------------------------------\n";
@@ -45,9 +57,20 @@ public class FormResultOfClaim
             else
             {
                 buf += "Нет\n";
-                buf += "Заявления абитуриента:\n";
+                buf += "Заявления абитуриента на бюджет:\n";
                 for(Claim claim : user.get().getClaims())
                 {
+                    if(!claim.isBudget())
+                        continue;
+                    buf += "\n----------------------------------\n";
+                    buf += claim.toString();
+                    buf += "\n----------------------------------\n";
+                }
+                buf += "\nЗаявления абитуриента на платной основе::\n";
+                for(Claim claim : user.get().getClaims())
+                {
+                    if(claim.isBudget())
+                        continue;
                     buf += "\n----------------------------------\n";
                     buf += claim.toString();
                     buf += "\n----------------------------------\n";
