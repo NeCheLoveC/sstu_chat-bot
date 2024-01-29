@@ -1,5 +1,5 @@
 
-Мудуль 1 - Чат-бот для Абитуриентов СГТУ имени Гагарина Ю.А.
+Модуль 1 - Чат-бот для Абитуриентов СГТУ имени Гагарина Ю.А.
 
 Пример работы чат-бота: https://drive.google.com/file/d/1QxDCK9aHNdIY4DRZIPWdPeauEofOatQf/view?usp=sharing
 
